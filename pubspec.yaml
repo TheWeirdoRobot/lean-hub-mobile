@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   cached_network_image: ^4.0.4
+  connectivity_plus: ^7.3.2
   flutter:
     sdk: flutter
   flutter_image_compress: ^2.5.1
@@ -15,12 +16,14 @@ dependencies:
   image_picker: ^1.2.4
   intl: ^0.20.3
   material_ui: ^1.6.0
+  shared_preferences: ^2.5.6
   supabase_flutter: ^2.18.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  shared_preferences_platform_interface: ^2.4.2
 
 flutter:
   uses-material-design: true

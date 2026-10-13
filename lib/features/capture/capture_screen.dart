@@ -8,15 +8,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/widgets.dart';
 import '../../data/repositories.dart';
 
-/// Upload quality. Settings will make these configurable in the next
-/// checkpoint; until then every photo uses these values.
-class PhotoUploadOptions {
-  const PhotoUploadOptions({this.maxDimension = 2048, this.jpegQuality = 80});
-
-  final int maxDimension;
-  final int jpegQuality;
-}
-
 /// Camera or library → preview → optional caption → upload to a task.
 /// Pops `true` when a photo was uploaded so Task Detail can refresh.
 class CaptureScreen extends StatefulWidget {
@@ -24,12 +15,10 @@ class CaptureScreen extends StatefulWidget {
     super.key,
     required this.taskId,
     this.taskTitle,
-    this.options = const PhotoUploadOptions(),
   });
 
   final String taskId;
   final String? taskTitle;
-  final PhotoUploadOptions options;
 
   @override
   State<CaptureScreen> createState() => _CaptureScreenState();
@@ -77,10 +66,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
-  /// Resizes to fit [PhotoUploadOptions.maxDimension] and re-encodes as JPEG,
-  /// which also converts iPhone HEIC photos into something browsers can show.
+  /// Resizes to the photo-quality setting and re-encodes as JPEG, which also
+  /// converts iPhone HEIC photos into something browsers can show.
   Future<Uint8List> _compress(XFile picked) async {
-    final o = widget.options;
+    final o = RepositoryScope.of(context).settings.value.photoQuality;
     final out = await FlutterImageCompress.compressWithFile(
       picked.path,
       minWidth: o.maxDimension,
@@ -112,6 +101,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
     final repos = RepositoryScope.of(context);
     final userId = repos.auth.currentUserId;
     if (userId == null) return;
+
+    if (repos.settings.value.wifiOnlyUploads &&
+        !await repos.connectivity.isOnUnmeteredNetwork()) {
+      if (!mounted || !await _confirmCellularUpload()) return;
+    }
+    if (!mounted) return;
 
     setState(() {
       _uploading = true;
@@ -153,6 +148,29 @@ class _CaptureScreenState extends State<CaptureScreen> {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(warning ?? 'Photo uploaded')));
     context.pop(true);
+  }
+
+  Future<bool> _confirmCellularUpload() async {
+    final kb = (_bytes!.length / 1024).toStringAsFixed(0);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Not on Wi-Fi'),
+        content: Text('Wi-Fi-only uploads is turned on in Settings. '
+            'Upload this $kb KB photo using cellular data anyway?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Wait for Wi-Fi'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Upload anyway'),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
   }
 
   @override

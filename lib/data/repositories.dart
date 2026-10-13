@@ -3,16 +3,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth_repository.dart';
 import 'comment_repository.dart';
+import 'connectivity_repository.dart';
 import 'file_repository.dart';
 import 'phase_repository.dart';
 import 'profile_repository.dart';
+import 'settings_repository.dart';
 import 'status_repository.dart';
 import 'task_repository.dart';
 
 /// All repositories, created once in main() and handed down the tree.
 class Repositories {
-  Repositories(SupabaseClient client)
-      : auth = AuthRepository(client),
+  Repositories(SupabaseClient client, {required this.settings})
+      : connectivity = ConnectivityRepository(),
+        auth = AuthRepository(client),
         tasks = TaskRepository(client),
         profiles = ProfileRepository(client),
         comments = CommentRepository(client),
@@ -27,6 +30,8 @@ class Repositories {
   final FileRepository files;
   final StatusRepository statuses;
   final PhaseRepository phases;
+  final SettingsRepository settings;
+  final ConnectivityRepository connectivity;
 }
 
 class RepositoryScope extends InheritedWidget {

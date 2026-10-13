@@ -4,8 +4,19 @@ Flutter companion app for the LEAN Hub website. It talks to the **same Supabase
 project** as the website and never changes the schema or RLS policies.
 
 Done so far: Sign-in, My Tasks (realtime), Task Detail with photo thumbnails,
-and Capture (camera/library → caption → upload). Timeline, Components and
-Settings are placeholders for now.
+Capture (camera/library → caption → upload) and Settings. Timeline and
+Components are placeholders for now.
+
+## Settings
+
+Stored on the device with `shared_preferences` (not synced to Supabase):
+
+| Setting | Effect |
+| --- | --- |
+| Wi-Fi-only uploads | Capture asks before uploading over cellular data |
+| Photo quality | High 2048 px / Standard 1600 px / Data saver 1024 px (JPEG) |
+| Default sub-team filter | Pre-selected in My Tasks |
+| Theme | Dark (default), Light, or match the iPhone |
 
 ## Requirements
 
@@ -118,8 +129,8 @@ data, so a state library would add concepts without removing any code.
   `{userId}/{taskId}/{timestamp}-{safeName}`, then a `files` row
   (`FileRepository.uploadToTask`). Read them with signed URLs
   (`FileRepository.signedUrls`).
-- Photos are resized to fit 2048 px and re-encoded as JPEG (quality 80), which
-  also turns iPhone HEIC photos into something browsers can show.
+- Photos are resized and re-encoded as JPEG per the Photo quality setting,
+  which also turns iPhone HEIC photos into something browsers can show.
 - Captions: `files` has no caption column, so a caption is posted as a task
   comment: `Photo IMG_20261013_101500.jpg: <caption>`.
 - "My tasks" uses the website's rule (`taskPeople.js`): tasks naming you, plus

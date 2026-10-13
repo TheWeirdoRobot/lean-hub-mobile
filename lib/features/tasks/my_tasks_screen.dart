@@ -38,6 +38,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
     super.didChangeDependencies();
     if (_unsubscribe != null) return;
     _repos = RepositoryScope.of(context);
+    _defaultSubTeam = _repos.settings.value.defaultSubTeam;
+    _filter = TaskFilter(subTeam: _defaultSubTeam);
+    _repos.settings.addListener(_onSettingsChanged);
     _load();
     // Any change to tasks (from the website or another phone) triggers a
     // quiet reload, debounced so a burst of edits causes one fetch.
@@ -47,8 +50,20 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
     });
   }
 
+  /// The default sub-team is applied at startup and again whenever it's
+  /// changed in Settings; other filter choices are left alone.
+  String? _defaultSubTeam;
+
+  void _onSettingsChanged() {
+    final next = _repos.settings.value.defaultSubTeam;
+    if (next == _defaultSubTeam) return;
+    _defaultSubTeam = next;
+    setState(() => _filter = TaskFilter(subTeam: next, status: _filter.status));
+  }
+
   @override
   void dispose() {
+    _repos.settings.removeListener(_onSettingsChanged);
     _debounce?.cancel();
     _unsubscribe?.call();
     super.dispose();

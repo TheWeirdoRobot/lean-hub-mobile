@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/env.dart';
+import 'data/settings_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,9 +13,9 @@ Future<void> main() async {
     return;
   }
 
-  await Supabase.initialize(
-    url: Env.supabaseUrl,
-    publishableKey: Env.supabaseAnonKey,
-  );
-  runApp(LeanHubApp(client: Supabase.instance.client));
+  final (settings, _) = await (
+    SettingsRepository.load(),
+    Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseAnonKey),
+  ).wait;
+  runApp(LeanHubApp(client: Supabase.instance.client, settings: settings));
 }
